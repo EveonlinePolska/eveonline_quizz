@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Podstawy EVE Online</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e; /* Ciemne tło */
+            color: #e0e0e0; /* Jasny tekst */
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #quiz-container {
+            background-color: #2a2a4a; /* Nieco jaśniejsze tło kontenera */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1, h2 {
+            color: #92b8ff; /* Jasnoniebieski kolor nagłówków */
+            margin-bottom: 20px;
+        }
+
+        #quiz-progress {
+            font-size: 1.1em;
+            color: #b0b0b0;
+        }
+
+        #question-area {
+            background-color: #3a3a5a; /* Tło obszaru pytania */
+            padding: 25px;
+            border-radius: 8px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        #options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-button {
+            background-color: #4a4a7a;
+            color: #e0e0e0;
+            border: 1px solid #5a5a8a;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            text-align: left;
+        }
+
+        .option-button:hover {
+            background-color: #5a5a9a;
+            border-color: #7a7ac0;
+        }
+
+        .option-button.selected {
+            background-color: #6a6ad0;
+            border-color: #9a9ae0;
+            color: #ffffff;
+        }
+
+        .option-button.correct {
+            background-color: #4CAF50; /* Zielony */
+            border-color: #66BB6A;
+            color: white;
+            font-weight: bold;
+        }
+
+        .option-button.incorrect {
+            background-color: #F44336; /* Czerwony */
+            border-color: #E57373;
+            color: white;
+        }
+
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #navigation-buttons {
+            display: flex;
+            justify-content: center; /* Wyśrodkuj przycisk zakończ */
+            gap: 10px;
+        }
+
+        #navigation-buttons button,
+        #results-area button {
+            background-color: #0f3460; /* Ciemnoniebieski */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #navigation-buttons button:hover,
+        #results-area button:hover {
+            background-color: #1a4d8c;
+        }
+
+        #navigation-buttons button:disabled {
+            background-color: #0b2240;
+            cursor: not-allowed;
+        }
+
+        #submit-btn {
+            background-color: #007bff; /* Niebieski dla zakończ */
+        }
+
+        #submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #results-area {
+            display: none;
+            background-color: #3a3a5a;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        #results-area h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #answers-review p {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #2a2a4a;
+        }
+
+        .review-correct {
+            color: #66BB6A;
+        }
+
+        .review-incorrect {
+            color: #E57373;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <h1 id="quiz-title">Quiz: Podstawy EVE Online</h1>
+        <div id="quiz-progress">Pytanie <span id="current-question-number">1</span> / <span id="total-questions">50</span></div>
+
+        <div id="question-area">
+            <p id="question-text">Ładowanie pytania...</p>
+            <div id="options-container">
+                </div>
+        </div>
+
+        <div id="navigation-buttons">
+            <button id="submit-btn" style="display: none;">Zakończ Quiz</button>
+        </div>
+
+        <div id="results-area">
+            <h2>Wyniki Quizu</h2>
+            <p>Twój wynik: <span id="score-display"></span></p>
+            <h3>Przegląd Odpowiedzi:</h3>
+            <div id="answers-review">
+                </div>
+            <button id="restart-btn">Zacznij od nowa</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Która frakcja EVE Online słynie z technologii laserowej i opancerzenia?",
+                options: ["A) Gallente", "B) Minmatar", "C) Amarr", "D) Caldari"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Jaki typ statku jest podstawową jednostką eksploracyjną na początku gry?",
+                options: ["A) Battleship", "B) Frigate", "C) Destroyer", "D) Carrier"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Która frakcja jest znana z opancerzenia i dronów?",
+                options: ["A) Gallente", "B) Minmatar", "C) Amarr", "D) Caldari"],
+                correctAnswer: 0 // A
+            },
+            {
+                question: "Jaki moduł statku służy głównie do dezaktywacji napędu warp przeciwnika?",
+                options: ["A) Afterburner", "B) Warp Scrambler", "C) Micro Warp Drive", "D) Cloaking Device"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Czym charakteryzują się statki Minmatar?",
+                options: ["A) Tarcze i rakiety", "B) Opancerzenie i drony", "C) Pancerz i lasery", "D) Pancerz i artyleria"],
+                correctAnswer: 3 // D
+            },
+            {
+                question: "Jaką walutą płaci się za większość przedmiotów na rynku EVE?",
+                options: ["A) LP (Loyalty Points)", "B) Plex", "C) ISK (Interstellar Kredits)", "D) Aurum"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Co oznacza skrót PvP?",
+                options: ["A) Player vs. Environment", "B) Player vs. Player", "C) Pilot vs. Pilot", "D) Planet vs. Planet"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'warp drive'?",
+                options: ["A) Silnik do skoku przez stargate", "B) Napęd do szybkiego przemieszczania się w systemie", "C) Moduł do hakowania", "D) System obronny statku"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Do czego służą punkty umiejętności (Skill Points)?",
+                options: ["A) Do zakupu statków", "B) Do awansowania w korporacji", "C) Do odblokowywania i ulepszania umiejętności", "D) Do zwiększania szybkości warpu"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Jaka jest główna różnica między High-sec (0.5+ security) a Null-sec (0.0 security)?",
+                options: ["A) Cena statków", "B) Obecność NPC", "C) Zasady PvP", "D) Dostępność misji"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Jakie moduły są potrzebne do hakowania Data site'ów?",
+                options: ["A) Data Analyzer", "B) Relic Analyzer", "C) Salvager", "D) Mining Laser"],
+                correctAnswer: 0 // A
+            },
+            {
+                question: "Co jest podstawowym celem górnictwa w EVE Online?",
+                options: ["A) Niszczenie asteroid", "B) Wydobywanie rudy", "C) Zbieranie reliktów", "D) Atakowanie statków"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Do czego służą 'Blueprints'?",
+                options: ["A) Do dekoracji hangaru", "B) Do budowania przedmiotów i statków", "C) Do kupowania skillów", "D) Do eksploracji"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Czym jest ISK?",
+                options: ["A) Forma waluty w grze", "B) Typ modułu bojowego", "C) Rodzaj statku przemysłowego", "D) Nazwa gwiazdozbioru"],
+                correctAnswer: 0 // A
+            },
+            {
+                question: "Gdzie handluje się większością przedmiotów w EVE Online?",
+                options: ["A) Na czacie korporacyjnym", "B) Na forum gry", "C) Na Rynku (Market)", "D) Bezpośrednio z NPC"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Co się stanie, gdy zaatakujesz gracza w High-sec (0.5+ security) bez konsekwencji?",
+                options: ["A) Nic", "B) Otrzymasz bonus do ISK", "C) CONCORD Cię zniszczy", "D) Zostaniesz wykluczony z korporacji"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Jaki jest status bezpieczeństwa systemu 0.4?",
+                options: ["A) High-sec", "B) Low-sec", "C) Null-sec", "D) Wormhole"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest Stargate?",
+                options: ["A) Typ statku kosmicznego", "B) Obiekt do szybkiego przemieszczania się między systemami", "C) Rodzaj broni kinetycznej", "D) Element interfejsu pilota"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Czym jest Citadel (Upwell Structure)?",
+                options: ["A) Naturalny księżyc", "B) Rodzaj kosmicznej stacji budowanej przez graczy", "C) Obiekt misji historycznej", "D) Starożytny artefakt obcych"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co dzieje się w Wormhole Space (WH), jeśli chodzi o lokalny czat?",
+                options: ["A) Lokalny czat jest zawsze pusty", "B) Lokalny czat działa normalnie", "C) Lokalny czat nie istnieje", "D) Widzisz tylko znajomych na lokalnym czacie"],
+                correctAnswer: 0 // A
+            },
+            {
+                question: "Jaki moduł służy do wzmocnienia tarcz statku?",
+                options: ["A) Armor Repairer", "B) Shield Booster", "C) Warp Scrambler", "D) Afterburner"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'rig' w EVE Online?",
+                options: ["A) Typ broni energetycznej", "B) Moduł wzmacniający statek bez użycia CPU/Power Grid", "C) Rodzaj kapsuły ratunkowej", "D) Element interfejsu do zarządzania dronami"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Jaki moduł pozwala na szybsze podróżowanie w obrębie systemu?",
+                options: ["A) Micro Warp Drive (MWD)", "B) Cloaking Device", "C) Sensor Booster", "D) Tracking Enhancer"],
+                correctAnswer: 0 // A
+            },
+            {
+                question: "Jakie są trzy główne typy slotów modułów na statku?",
+                options: ["A) Górne, Dolne, Boczne", "B) High, Mid, Low", "C) Przód, Tył, Boki", "D) Pancerz, Tarcze, Drony"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'Capacitor' statku?",
+                options: ["A) Magazyn paliwa", "B) Źródło energii dla aktywnych modułów", "C) Punkt wejścia do warp drive", "D) Magazyn amunicji"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Które z poniższych nie jest typem broni w EVE Online?",
+                options: ["A) Lasery", "B) Drony", "C) Railgany", "D) Torpedy"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Jak nazywa się podstawowa korporacja NPC, która dostarcza misje dla nowych graczy?",
+                options: ["A) Gallente Federation", "B) Sisters of EVE", "C) CONCORD", "D) Aura"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Do czego służy moduł 'Salvager'?",
+                options: ["A) Do naprawy uszkodzonych statków", "B) Do niszczenia wraków", "C) Do pozyskiwania materiałów z wraków", "D) Do maskowania statku"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Co jest wymagane do aktywowania 'Cloaking Device'?",
+                options: ["A) Statek musi być nieruchomy", "B) Brak statków w odległości 2000m", "C) Wystarczająca ilość Capa", "D) Wszystkie powyższe"],
+                correctAnswer: 3 // D
+            },
+            {
+                question: "Jaki efekt daje moduł 'Webifier' (Stasis Webifier)?",
+                options: ["A) Zwiększa prędkość celu", "B) Spowalnia cel", "C) Zwiększa obrażenia celu", "D) Naprawia tarcze celu"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'Jump Clone'?",
+                options: ["A) Typ drona bojowego", "B) Klon pilota przechowywany w stacji, pozwalający na szybką zmianę lokalizacji", "C) Moduł do szybkiego poruszania się między systemami", "D) Specjalny typ statku do skoków"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Które zasoby są potrzebne do tankowania pancerza statku?",
+                options: ["A) Tarcze", "B) Drony", "C) Pancerz", "D) Kapacytor"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Co to są 'Loyalty Points' (LP)?",
+                options: ["A) Punkty zdobywane za handel", "B) Punkty zdobywane w misjach dla korporacji NPC, wymienialne na przedmioty", "C) Punkty do ulepszania skillów", "D) Punkty do personalizacji statku"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Jak nazywa się miejsce w przestrzeni, gdzie można bezpiecznie wylogować się ze statku bez ryzyka jego zniszczenia?",
+                options: ["A) Stacja", "B) Safe Spot", "C) Stargate", "D) Anomalia"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'Market Order'?",
+                options: ["A) Zamówienie od NPC", "B) Zlecenie kupna lub sprzedaży przedmiotu na rynku", "C) Rozkaz wydany przez fleet commandera", "D) Plan misji"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Jakie są główne typy odporności statku?",
+                options: ["A) Lasery, Projektile, Drony", "B) EM, Thermal, Kinetic, Explosive", "C) Tarcze, Pancerz, Struktura", "D) Krótkodystansowe, Średniodystansowe, Długodystansowe"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'Fleet' w EVE Online?",
+                options: ["A) Grupa stacji", "B) Zgrupowanie graczy w celu wspólnego działania", "C) Typ statku transportowego", "D) System gwiezdny"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "W którym regionie przestrzeni EVE statki graczy mogą zostać zaatakowane bez interwencji CONCORD?",
+                options: ["A) High-sec", "B) Low-sec", "C) Null-sec", "D) B i C"],
+                correctAnswer: 3 // D
+            },
+            {
+                question: "Do czego służy 'Docking Request'?",
+                options: ["A) Do zniszczenia statku", "B) Do przycumowania do stacji lub cytadeli", "C) Do wejścia w warp", "D) Do wyrzucenia ładunku"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co jest 'Capsule' (Kapsuła)?",
+                options: ["A) Rodzaj broni", "B) Mały statek, w którym znajduje się pilot, uruchamiany po zniszczeniu głównego statku", "C) Moduł do eksploracji", "D) Jednostka walutowa"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co oznacza, gdy system ma Security Status 1.0?",
+                options: ["A) To Null-sec", "B) To High-sec", "C) To Wormhole", "D) To Low-sec"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Jaki skill jest niezbędny do pilotowania statków wyższej klasy?",
+                options: ["A) Science", "B) Navigation", "C) Spaceship Command", "D) Gunnery"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Co to jest 'Aggression Timer'?",
+                options: ["A) Czas, po którym możesz znowu atakować", "B) Czas, przez który nie możesz undockować po ataku", "C) Czas, przez który CONCORD Cię ściga", "D) Czas, przez który nie możesz wejść na stację lub stargate po zaatakowaniu gracza"],
+                correctAnswer: 3 // D
+            },
+            {
+                question: "Które z poniższych NIE jest typem modułu obronnego?",
+                options: ["A) Shield Extender", "B) Armor Plate", "C) Target Painter", "D) Damage Control"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Do czego służy 'Jump Drive' (na statkach Capital)?",
+                options: ["A) Do skoku między stacjami w tym samym systemie", "B) Do natychmiastowego przemieszczania się do odległych systemów bez użycia stargate, wymaga to aktywnego pola Cynosural w systemie docelowym.", "C) Do szybszego warpowania", "D) Do skanowania systemów"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Czym są 'Anomalies'?",
+                options: ["A) Niebezpieczne zjawiska pogodowe", "B) Miejsca w przestrzeni z NPC do zniszczenia lub eksploracji, widoczne w Probe Scanner", "C) Nowe typy statków", "D) Rzadkie minerały"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Która z frakcji ma statki z premią do traktorów i salvagerów?",
+                options: ["A) Amarr", "B) Caldari", "C) Gallente", "D) Minmatar"],
+                correctAnswer: 2 // C
+            },
+            {
+                question: "Co jest głównym celem 'Market PvP'?",
+                options: ["A) Niszczenie statków na rynku", "B) Manipulowanie cenami i monopolizowanie rynków", "C) Kupowanie wszystkich przedmiotów", "D) Sprzedawanie przedmiotów z rabatem"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Jaki rodzaj uszkodzeń zadają lasery?",
+                options: ["A) Kinetic i Explosive", "B) EM i Thermal", "C) Explosive i Thermal", "D) Kinetic i EM"],
+                correctAnswer: 1 // B
+            },
+            {
+                question: "Co to jest 'Dreadnought'?",
+                options: ["A) Mały statek eksploracyjny", "B) Duży, ciężko opancerzony okręt wojenny, specjalizujący się w niszczeniu struktur", "C) Statek transportowy", "D) Moduł do wydobywania rudy"],
+                correctAnswer: 1 // B
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = Array(questions.length).fill(null); // Przechowuje wybrane odpowiedzi (0, 1, 2, 3)
+        let correctAnswersCount = 0;
+
+        const quizContainer = document.getElementById('quiz-container');
+        const questionArea = document.getElementById('question-area');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const currentQuestionNumberSpan = document.getElementById('current-question-number');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultsArea = document.getElementById('results-area');
+        const scoreDisplay = document.getElementById('score-display');
+        const answersReview = document.getElementById('answers-review');
+        const restartBtn = document.getElementById('restart-btn');
+
+        totalQuestionsSpan.textContent = questions.length;
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            questionText.textContent = question.question;
+            optionsContainer.innerHTML = ''; // Wyczyść poprzednie opcje
+
+            question.options.forEach((optionText, index) => {
+                const optionBtn = document.createElement('button');
+                optionBtn.classList.add('option-button');
+                optionBtn.textContent = optionText;
+                optionBtn.dataset.option = index; // Zapisz indeks opcji
+                optionBtn.onclick = () => selectOption(optionBtn);
+                optionsContainer.appendChild(optionBtn);
+
+                // Jeśli odpowiedź została już wybrana (np. po cofnięciu z przeglądu), zaznacz ją
+                if (userAnswers[currentQuestionIndex] !== null) {
+                    const selectedOptionIndex = userAnswers[currentQuestionIndex];
+                    const correctOptionIndex = questions[currentQuestionIndex].correctAnswer;
+
+                    Array.from(optionsContainer.children).forEach(btn => {
+                        btn.disabled = true; // Wyłącz wszystkie przyciski
+                        if (parseInt(btn.dataset.option) === selectedOptionIndex) {
+                            btn.classList.add('selected');
+                            if (selectedOptionIndex === correctOptionIndex) {
+                                btn.classList.add('correct');
+                            } else {
+                                btn.classList.add('incorrect');
+                            }
+                        }
+                        // Podświetl poprawną odpowiedź, nawet jeśli użytkownik wybrał źle
+                        if (parseInt(btn.dataset.option) === correctOptionIndex) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                }
+            });
+
+            updateSubmitButtonVisibility();
+            updateProgress();
+        }
+
+        function selectOption(selectedButton) {
+            // Zaznacz wybraną opcję i wyłącz wszystkie przyciski
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.classList.remove('selected');
+                btn.disabled = true; // Wyłącz wszystkie opcje po wybraniu jednej
+            });
+            selectedButton.classList.add('selected');
+
+            const selectedOptionIndex = parseInt(selectedButton.dataset.option); // Pobierz indeks numeryczny
+            const correctOptionIndex = questions[currentQuestionIndex].correctAnswer;
+            const correctButton = optionsContainer.querySelector(`[data-option="${correctOptionIndex}"]`);
+
+            if (selectedOptionIndex === correctOptionIndex) {
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+                if (correctButton) {
+                    correctButton.classList.add('correct'); // Podświetl poprawną odpowiedź na zielono
+                }
+            }
+
+            // Zapisz odpowiedź użytkownika (indeks numeryczny)
+            userAnswers[currentQuestionIndex] = selectedOptionIndex;
+
+            // Automatyczne przejście do następnego pytania po 2 sekundach
+            setTimeout(() => {
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                } else {
+                    // Jeśli to ostatnie pytanie, automatycznie zakończ quiz
+                    submitQuiz();
+                }
+            }, 2000); // 2 sekundy opóźnienia
+        }
+
+        function updateSubmitButtonVisibility() {
+            if (currentQuestionIndex === questions.length - 1) {
+                submitBtn.style.display = 'inline-block';
+            } else {
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        function updateProgress() {
+            currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
+        }
+
+        function submitQuiz() {
+            correctAnswersCount = 0;
+            answersReview.innerHTML = ''; // Wyczyść poprzedni przegląd
+
+            questions.forEach((q, index) => {
+                const userAnswerIndex = userAnswers[index];
+                const isCorrect = (userAnswerIndex === q.correctAnswer);
+
+                if (isCorrect) {
+                    correctAnswersCount++;
+                }
+
+                const reviewItem = document.createElement('p');
+                reviewItem.innerHTML = `<strong>Pytanie ${index + 1}:</strong> ${q.question}<br>` +
+                                       `Twoja odpowiedź: ${userAnswerIndex !== null ? q.options[userAnswerIndex] : 'Brak odpowiedzi'}<br>` +
+                                       `Prawidłowa odpowiedź: ${q.options[q.correctAnswer]}`;
+                reviewItem.classList.add(isCorrect ? 'review-correct' : 'review-incorrect');
+                answersReview.appendChild(reviewItem);
+            });
+
+            const totalQuestions = questions.length;
+            const percentage = (correctAnswersCount / totalQuestions) * 100;
+            let grade = 0;
+            let passMessage = '';
+
+            // Skala ocen
+            if (percentage >= 90) { // 45-50 prawidłowych
+                grade = 5;
+            } else if (percentage >= 70) { // 35-44 prawidłowych
+                grade = 4;
+            } else if (percentage >= 50) { // 25-34 prawidłowych
+                grade = 3;
+            } else if (percentage >= 30) { // 15-24 prawidłowych
+                grade = 2;
+            } else { // 0-14 prawidłowych
+                grade = 1;
+            }
+
+            if (grade >= 4) {
+                passMessage = "Gratulacje! Zaliczyłeś kurs EVE Online!";
+            } else {
+                passMessage = "Niestety, nie udało Ci się zaliczyć kursu. Spróbuj ponownie!";
+            }
+
+            scoreDisplay.innerHTML = `${correctAnswersCount} / ${totalQuestions} prawidłowych odpowiedzi.<br>`;
+            const gradeDisplay = document.createElement('p');
+            gradeDisplay.innerHTML = `Twoja ocena: <span style="font-size: 1.5em; font-weight: bold; color: ${grade >= 4 ? '#4CAF50' : '#F44336'};">${grade}</span>`;
+            resultsArea.insertBefore(gradeDisplay, scoreDisplay.nextSibling); // Wstaw po wyświetleniu wyniku
+
+            const passMessageElement = document.createElement('p');
+            passMessageElement.textContent = passMessage;
+            passMessageElement.style.fontWeight = 'bold';
+            passMessageElement.style.marginTop = '15px';
+            resultsArea.insertBefore(passMessageElement, answersReview); // Wstaw przed przeglądem odpowiedzi
+
+            questionArea.style.display = 'none';
+            document.getElementById('navigation-buttons').style.display = 'none'; // Ukryj cały div z przyciskami nawigacji
+            resultsArea.style.display = 'block';
+            quizContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = Array(questions.length).fill(null);
+            correctAnswersCount = 0;
+
+            // Usuń dynamicznie dodane elementy (ocenę i wiadomość o zaliczeniu)
+            const scoreP = resultsArea.querySelector('#score-display').parentNode;
+            if (scoreP && scoreP.nextElementSibling && scoreP.nextElementSibling.tagName === 'P') {
+                scoreP.nextElementSibling.remove();
+            }
+            if (scoreP && scoreP.nextElementSibling && scoreP.nextElementSibling.tagName === 'P') {
+                 scoreP.nextElementSibling.remove();
+            }
+            answersReview.innerHTML = ''; // Wyczyść przegląd odpowiedzi
+
+            questionArea.style.display = 'flex';
+            document.getElementById('navigation-buttons').style.display = 'flex';
+            resultsArea.style.display = 'none';
+            loadQuestion();
+        }
+
+        // Event Listeners
+        submitBtn.addEventListener('click', submitQuiz);
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Initial load
+        loadQuestion();
+    </script>
+</body>
+</html>
